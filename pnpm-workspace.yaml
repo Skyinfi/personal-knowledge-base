@@ -1,0 +1,4 @@
+packages: []
+allowBuilds:
+  '@astryxdesign/cli': true
+  '@astryxdesign/core': true
