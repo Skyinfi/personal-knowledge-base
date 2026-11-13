@@ -1,45 +1,57 @@
-import { Button } from '@astryxdesign/core/Button'
 import { Text } from '@astryxdesign/core/Text'
-import { HStack, VStack } from '@astryxdesign/core/Layout'
-import { Theme } from '@astryxdesign/core/theme'
-import { neutralTheme } from '@astryxdesign/theme-neutral/built'
-import { signOut } from './signout'
+import { VStack } from '@astryxdesign/core/Layout'
+import { Suspense } from 'react'
+import Link from 'next/link'
+import { excerpt } from '@/lib/blog/excerpt'
+import { formatPostDate } from '@/lib/blog/format-date'
+import { createSupabaseBlogDb } from '@/lib/blog/supabase-db'
+import { createClient } from '@/lib/supabase/server'
+import { BlogFrame } from './blog-frame'
 
 export const metadata = { title: '知识库 | Personal Knowledge Base' }
 
-export default function KnowledgeBaseHome() {
+export default function KnowledgeBasePage() {
   return (
-    <Theme theme={neutralTheme} mode="light">
-      <main
-        style={{
-          minHeight: '100vh',
-          backgroundColor: 'var(--color-background-body)',
-          padding: 'var(--spacing-8) var(--spacing-6)',
-        }}
-      >
-        <div style={{ maxWidth: 960, marginInline: 'auto' }}>
-          <header>
-            <HStack gap={3} vAlign="center">
-              <Text type="body" weight="bold">
-                Personal Knowledge Base
-              </Text>
-              <form action={signOut} style={{ marginLeft: 'auto' }}>
-                <Button type="submit" label="退出登录" variant="secondary" />
-              </form>
-            </HStack>
-          </header>
-          <section style={{ paddingTop: 'var(--spacing-10)' }}>
-            <VStack gap={3}>
-              <Text type="display-1" as="h1">
-                我的知识库
-              </Text>
-              <Text type="body" color="secondary">
-                登录已经完成。笔记还没有接入，这里会用来存放你的私人内容。
-              </Text>
-            </VStack>
-          </section>
-        </div>
-      </main>
-    </Theme>
+    <Suspense fallback={null}>
+      <PostList />
+    </Suspense>
+  )
+}
+
+async function PostList() {
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.getClaims()
+  const userId = typeof data?.claims?.sub === 'string' ? data.claims.sub : ''
+  if (error || !userId) return null
+
+  const posts = await createSupabaseBlogDb(supabase).listPosts(userId)
+
+  return (
+    <BlogFrame>
+      <Text type="display-1" as="h1">
+        我的知识库
+      </Text>
+      {posts.length === 0 ? <Text type="body">还没有文章</Text> : null}
+      <VStack gap={3}>
+        {posts.map((post) => {
+          const summary = excerpt(post.body_md)
+          return (
+            <article key={post.id}>
+              <VStack gap={1}>
+                <Link href={`/kb/${post.id}`}>{post.title}</Link>
+                <Text type="body" color="secondary">
+                  {formatPostDate(post.created_at)}
+                </Text>
+                {summary ? (
+                  <Text type="body" color="secondary">
+                    {summary}
+                  </Text>
+                ) : null}
+              </VStack>
+            </article>
+          )
+        })}
+      </VStack>
+    </BlogFrame>
   )
 }
