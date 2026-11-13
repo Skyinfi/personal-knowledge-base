@@ -1,0 +1,6 @@
+export const TITLE_REQUIRED = '请填写标题。'
+export const TITLE_TOO_LONG = '标题不能超过 120 个字。'
+export const BODY_TOO_LONG = '正文不能超过 50000 个字。'
+export const COMMENT_REQUIRED = '请填写评论。'
+export const COMMENT_TOO_LONG = '评论不能超过 2000 个字。'
+export const COMMENT_MISSING = '评论不存在。'
