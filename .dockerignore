@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.cursor
+.superpowers
+docs
+.env
+.env.*
+*.log
+coverage
